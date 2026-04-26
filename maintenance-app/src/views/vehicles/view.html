@@ -1,4 +1,4 @@
-﻿<section class="view-page vehicles-page stack">
+<section class="view-page vehicles-page stack">
   <main>
     <div class="vehicle-page">
       <div class="vehicle-page-header">
@@ -16,17 +16,17 @@
               class="vehicle-page-filter-input"
               placeholder="Search by name or license plate..."
             />
-            <select class="vehicle-page-filter-dropdown">
+            <select id="vehicle-page-filter-status" class="vehicle-page-filter-dropdown">
               <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="maintenance">Maintenance</option>
-              <option value="inactive">Inactive</option>
+              <option value="Active">Active</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="Inactive">Inactive</option>
             </select>
-            <select class="vehicle-page-filter-dropdown">
+            <select id="vehicle-page-filter-type" class="vehicle-page-filter-dropdown">
               <option value="">All Types</option>
-              <option value="truck">Truck</option>
-              <option value="van">Van</option>
-              <option value="car">Car</option>
+              <option value="Truck">Truck</option>
+              <option value="Van">Van</option>
+              <option value="Car">Car</option>
             </select>
           </div>
         </div>
@@ -49,10 +49,8 @@
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <!-- todo: populate this table -->
-              </tr>
+            <tbody id="vehicle-table-body">
+              <!-- Data will be populated here -->
             </tbody>
           </table>
         </div>
