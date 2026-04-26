@@ -50,6 +50,16 @@ export const routes = [
         },
     },
     {
+        path: "/vehicles/details",
+        title: "Vehicle Details",
+        navTitle: "Vehicles",
+        view: {
+            html: "/src/views/vehicles/details/view.html",
+            css: "/src/views/vehicles/details/view.css",
+            js: "/src/views/vehicles/details/view.js",
+        },
+    },
+    {
         path: "/spare-parts",
         title: "Spare Parts",
         navTitle: "Spare Parts",
