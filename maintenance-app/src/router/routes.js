@@ -20,6 +20,16 @@ export const routes = [
         },
     },
     {
+        path: "/my-work-orders",
+        title: "My Work Orders",
+        navTitle: "My Work Orders",
+        view: {
+            html: "/src/views/my-work-orders/view.html",
+            css: "/src/views/my-work-orders/view.css",
+            js: "/src/views/my-work-orders/view.js",
+        },
+    },
+    {
         path: "/work-orders/details",
         title: "Work Order Details",
         navTitle: "Work Orders",

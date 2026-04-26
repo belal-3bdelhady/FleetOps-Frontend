@@ -14,7 +14,7 @@ import {
 import {
     createIcons,
     icons,
-} from "../../../../../node_modules/lucide/dist/esm/lucide.mjs";
+} from "/node_modules/lucide/dist/esm/lucide.mjs";
 
 const PAGE_SIZE = 25;
 let currentContainer = null;

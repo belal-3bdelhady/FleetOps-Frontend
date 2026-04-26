@@ -18,7 +18,7 @@ import { renderEmergencyModal } from "./components/emergency-modal.js";
 import {
     createIcons,
     icons,
-} from "../../../../node_modules/lucide/dist/esm/lucide.mjs";
+} from "/node_modules/lucide/dist/esm/lucide.mjs";
 
 // ============================================================================
 // CONSTANTS

@@ -1,6 +1,196 @@
 ﻿.notifications-page {
-    max-width: 1100px;
+    max-width: 1080px;
     margin: 0 auto;
+    padding: 32px 0;
+    display: grid;
+    gap: 24px;
+}
+
+.notifications-header {
+    display: grid;
+    gap: 10px;
+}
+
+.notifications-badge {
+    display: inline-flex;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: rgba(14, 165, 233, 0.12);
+    color: #0369a1;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.notifications-header h1 {
+    margin: 0;
+    font-size: clamp(2rem, 2.5vw, 2.75rem);
+}
+
+.notifications-header p {
+    margin: 0;
+    color: var(--color-text-body);
+    max-width: 620px;
+}
+
+.notifications-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+}
+
+.notification-card {
     display: grid;
     gap: 16px;
+    padding: 24px;
+    border-radius: 24px;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid rgba(15, 22, 41, 0.06);
+}
+
+.notification-card__label {
+    display: inline-flex;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.04);
+    color: var(--color-text-title);
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.notification-card__title {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--color-text-title);
+}
+
+.notification-card__body {
+    margin: 0;
+    line-height: 1.8;
+    color: var(--color-text-body);
+}
+
+.notification-card__meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+}
+
+.notification-card__link {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.notification-card__link:hover {
+    text-decoration: underline;
+}
+
+.notification-card--alert .notification-card__label {
+    background: rgba(254, 215, 215, 0.9);
+    color: #b91c1c;
+}
+
+.notification-card--info .notification-card__label {
+    background: rgba(219, 234, 254, 0.9);
+    color: #1d4ed8;
+}
+
+.notification-card--warning .notification-card__label {
+    background: rgba(254, 243, 199, 0.9);
+    color: #92400e;
+}
+
+.live-map-overlay-card strong {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 1.05rem;
+}
+
+.live-map-overlay-card p {
+    margin: 0;
+    color: var(--color-text-body);
+    line-height: 1.7;
+}
+
+.leaflet-container {
+    background: #f5f7fb;
+}
+
+.leaflet-control-attribution,
+.leaflet-control-zoom,
+.leaflet-touch .leaflet-bar a,
+.leaflet-touch .leaflet-bar a:hover,
+.leaflet-bar a {
+    display: none !important;
+}
+
+.leaflet-marker-icon {
+    background: transparent !important;
+    border: none !important;
+}
+
+.live-tracker-label {
+    border: 1px solid transparent;
+    border-radius: 16px;
+    padding: 12px 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 16px 40px rgba(15, 22, 41, 0.08);
+    min-width: 140px;
+    font-size: 0.95rem;
+}
+
+.live-tracker-label .label-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: rgba(0, 0, 0, 0.05);
+    color: inherit;
+}
+
+.live-tracker-label span {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.live-tracker-label span small {
+    font-size: 0.78rem;
+    color: #475569;
+}
+
+@media (max-width: 900px) {
+    .live-tracking-page {
+        padding: 24px 0;
+    }
+    .live-tracking-map-card {
+        min-height: 560px;
+    }
+    .live-map-overlay-card {
+        left: 20px;
+        right: 20px;
+    }
+}
+
+@media (max-width: 640px) {
+    .live-tracking-header {
+        grid-template-columns: 1fr;
+    }
+    .live-tracking-head-right {
+        justify-content: flex-start;
+    }
+    .live-tracking-map-card {
+        min-height: 480px;
+    }
 }

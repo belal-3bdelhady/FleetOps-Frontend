@@ -1,8 +1,83 @@
-<section class="view-page app-section cod-management-page stack">
-    <section class="card stack">
-        <h1 class="heading-lg">COD Management</h1>
-        <p>This module is ready for implementation.</p>
-        <p class="helper-text">Use this section to build the cod management workflow.</p>
+<section class="view-page cod-management-page stack">
+    <section class="cod-page-header">
+        <div>
+            <h1 class="cod-page-title">COD Management</h1>
+            <p class="cod-page-subtitle">
+                Cash on Delivery tracking for collection and driver handover in
+                EGP.
+            </p>
+        </div>
+
+        <button class="button secondary" id="cod-export-btn" type="button">
+            <i data-lucide="download"></i>
+            <span>Export Report</span>
+        </button>
     </section>
+
+    <section class="cod-summary-grid" id="cod-summary-grid"></section>
+
+    <section class="cod-flow-card" id="cod-flow-card"></section>
+
+    <section class="cod-driver-card">
+        <header class="cod-section-header">
+            <div>
+                <h2 class="cod-section-title">
+                    <i data-lucide="map-pinned"></i>
+                    <span>Driver Handover Status</span>
+                </h2>
+                <p class="cod-section-subtitle" id="cod-driver-summary">
+                    Loading driver settlements...
+                </p>
+            </div>
+        </header>
+
+        <div class="cod-driver-grid" id="cod-driver-grid"></div>
+    </section>
+
+    <section class="cod-table-card">
+        <div class="cod-table-toolbar">
+            <div class="search-field cod-search-field">
+                <i data-lucide="search" class="search-icon"></i>
+                <input
+                    id="cod-search-input"
+                    type="search"
+                    placeholder="Search COD ID, order, customer, driver..." />
+            </div>
+
+            <div class="cod-toolbar-groups">
+                <div class="cod-filter-group">
+                    <span class="cod-filter-group__label">Collection:</span>
+                    <div class="cod-filter-chips" id="cod-collection-filters"></div>
+                </div>
+
+                <div class="cod-filter-group">
+                    <span class="cod-filter-group__label">Handover:</span>
+                    <div class="cod-filter-chips" id="cod-handover-filters"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="cod-table-wrap">
+            <table class="cod-table">
+                <thead>
+                    <tr>
+                        <th>COD ID</th>
+                        <th>Order</th>
+                        <th>Customer</th>
+                        <th>Driver</th>
+                        <th>Expected</th>
+                        <th>Collected</th>
+                        <th>Balance</th>
+                        <th>Collection</th>
+                        <th>Handed Over To Company</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="cod-table-body"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <div class="cod-modal-root" id="cod-modal-root"></div>
 </section>
 

@@ -1,8 +1,18 @@
 import WorkOrdersApi from "../../../services/api/work-orders.js";
+import MyWorkOrdersApi from "../../../services/api/my-work-orders.js";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function queryParams() {
     return new URLSearchParams(window.location.search);
+}
+
+function getReturnPath() {
+    const params = queryParams();
+    const from = params.get("from");
+    if (from === "my-work-orders") {
+        return "/my-work-orders";
+    }
+    return "/work-orders";
 }
 
 function getVehicleByPlate(plate) {
@@ -408,14 +418,18 @@ export function mount(container) {
         return;
     }
 
-    currentOrder = WorkOrdersApi.getOrderById(id);
+    currentOrder = WorkOrdersApi.getOrderById(id) || MyWorkOrdersApi.getOrderById(id);
     
     if (!currentOrder) {
-        container.innerHTML = `<div style="padding: 40px; text-align: center;"><h2>Order <span style="color:var(--color-primary)">${id}</span> not found</h2><p>It may have been deleted or does not exist.</p><a href="/work-orders" data-link>Back to List</a></div>`;
+        container.innerHTML = `<div style="padding: 40px; text-align: center;"><h2>Order <span style="color:var(--color-primary)">${id}</span> not found</h2><p>It may have been deleted or does not exist.</p><a href="${getReturnPath()}" data-link>Back to List</a></div>`;
         return;
     }
 
     renderPage(currentOrder);
+    const backLink = document.getElementById("wod-back-link");
+    if (backLink) {
+        backLink.href = getReturnPath();
+    }
     initAssignmentEdit();
     initCloseOrder();
 }

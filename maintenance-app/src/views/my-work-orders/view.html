@@ -1,0 +1,38 @@
+<section class="view-page mwo-page">
+    <div class="mwo-header">
+        <div class="mwo-header__meta">
+            <div>
+                <h1 class="mwo-title">My Work Orders</h1>
+                <p class="mwo-subtitle" id="mwo-date">Saturday, 25 April 2026</p>
+            </div>
+            <div class="mwo-summary" id="mwo-summary">
+                <div class="mwo-summary__item">
+                    <span class="mwo-summary__value" id="mwo-count-open">0</span>
+                    <span class="mwo-summary__label">Open</span>
+                </div>
+                <div class="mwo-summary__item">
+                    <span class="mwo-summary__value" id="mwo-count-inprogress">0</span>
+                    <span class="mwo-summary__label">In Progress</span>
+                </div>
+                <div class="mwo-summary__item">
+                    <span class="mwo-summary__value" id="mwo-count-resolved">0</span>
+                    <span class="mwo-summary__label">Resolved This Week</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mwo-tabs" role="tablist" aria-label="Work order filter tabs">
+            <button class="mwo-tab mwo-tab--active" type="button" data-tab="active">
+                Active <span class="mwo-tab__badge" id="mwo-tab-active">0</span>
+            </button>
+            <button class="mwo-tab" type="button" data-tab="resolved">
+                Resolved <span class="mwo-tab__badge" id="mwo-tab-resolved">0</span>
+            </button>
+            <button class="mwo-tab" type="button" data-tab="all">
+                All <span class="mwo-tab__badge" id="mwo-tab-all">0</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="mwo-cards" id="mwo-cards"></div>
+</section>

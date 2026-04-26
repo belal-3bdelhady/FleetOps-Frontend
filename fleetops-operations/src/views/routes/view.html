@@ -1,8 +1,65 @@
-<section class="view-page app-section routes-page stack">
-    <section class="card stack">
-        <h1 class="heading-lg">Routes</h1>
-        <p>This module is ready for implementation.</p>
-        <p class="helper-text">Use this section to build the routes workflow.</p>
+<section class="view-page routes-page stack">
+    <section class="routes-header">
+        <div class="routes-header__copy">
+            <h1 class="routes-title">Routes</h1>
+            <p class="routes-subtitle" id="routes-summary">Loading routes...</p>
+        </div>
+        <div class="routes-header__actions">
+            <button class="button secondary" id="routes-export-btn" type="button">
+                <i data-lucide="download"></i>
+                <span>Export</span>
+            </button>
+            <button class="button primary" id="routes-new-btn" type="button">
+                <i data-lucide="arrow-right"></i>
+                <span>New Route</span>
+            </button>
+        </div>
     </section>
-</section>
 
+    <section class="routes-overview" id="routes-overview"></section>
+
+    <section class="routes-toolbar">
+        <div class="search-field routes-search">
+            <i data-lucide="search" class="search-icon"></i>
+            <input
+                id="routes-search-input"
+                type="search"
+                placeholder="Search by route ID, driver, vehicle..." />
+        </div>
+        <div class="routes-toolbar__right">
+            <div class="routes-filters" id="routes-filters"></div>
+            <select id="routes-shift-select"></select>
+            <select id="routes-date-select"></select>
+        </div>
+    </section>
+
+    <section class="routes-table-card">
+        <div class="routes-table-wrap">
+            <table class="routes-table">
+                <thead>
+                    <tr>
+                        <th>Route ID</th>
+                        <th>Driver</th>
+                        <th>Vehicle</th>
+                        <th>Status</th>
+                        <th>Shift</th>
+                        <th>Stops</th>
+                        <th>Progress</th>
+                        <th>Distance</th>
+                        <th>Start</th>
+                        <th>ETA</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="routes-table-body"></tbody>
+            </table>
+        </div>
+        <div class="routes-footer">
+            <div id="routes-footer-summary"></div>
+            <div class="routes-pagination" id="routes-pagination"></div>
+        </div>
+    </section>
+
+    <div id="routes-modal-root"></div>
+</section>

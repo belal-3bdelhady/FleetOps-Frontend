@@ -1,7 +1,7 @@
 ﻿export function mount() {
-    // Reserved for page-specific interactions.
+    // Notifications page does not require extra scripting at the moment.
 }
 
 export function unmount() {
-    // Reserved for cleanup logic.
+    // Cleanup hooks if needed in future.
 }

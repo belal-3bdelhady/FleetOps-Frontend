@@ -1,8 +1,75 @@
-<section class="view-page app-section orders-page stack">
-    <section class="card stack">
-        <h1 class="heading-lg">Orders</h1>
-        <p>This module is ready for implementation.</p>
-        <p class="helper-text">Use this section to build the orders workflow.</p>
-    </section>
-</section>
+<section class="view-page orders-page stack">
+    <section class="orders-header">
+        <div class="orders-header__copy">
+            <h1 class="orders-title">Orders Management</h1>
+            <p class="orders-subtitle" id="orders-summary">
+                Loading orders...
+            </p>
+        </div>
 
+        <div class="orders-header__actions">
+            <button
+                class="button primary"
+                id="import-orders-btn"
+                type="button">
+                <i data-lucide="upload"></i>
+                <span>Import Orders</span>
+            </button>
+            <button
+                class="button outlined"
+                id="add-order-btn"
+                type="button">
+                <i data-lucide="plus"></i>
+                <span>Add Order</span>
+            </button>
+        </div>
+    </section>
+
+    <section class="orders-toolbar">
+        <div class="search-field orders-search">
+            <i data-lucide="search" class="search-icon"></i>
+            <input
+                id="orders-search-input"
+                type="search"
+                placeholder="Search by order ID, customer name..." />
+        </div>
+
+        <div class="orders-toolbar__right">
+            <div class="orders-filters" id="orders-filters"></div>
+            <button class="button secondary orders-export" id="export-orders-btn" type="button">
+                <i data-lucide="download"></i>
+                <span>Export</span>
+            </button>
+        </div>
+    </section>
+
+    <section class="orders-table-card">
+        <div class="orders-table-wrap">
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th class="orders-table__check">
+                            <input type="checkbox" aria-label="Select all orders" />
+                        </th>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Address</th>
+                        <th>Weight</th>
+                        <th>Payment</th>
+                        <th>Priority</th>
+                        <th>Window</th>
+                        <th>Status</th>
+                        <th>Driver / Vehicle</th>
+                        <th>Notifications</th>
+                        <th>Tracking</th>
+                    </tr>
+                </thead>
+                <tbody id="orders-table-body"></tbody>
+            </table>
+        </div>
+
+        <div class="orders-table-footer" id="orders-table-footer"></div>
+    </section>
+
+    <div class="orders-modal-root" id="orders-modal-root"></div>
+</section>

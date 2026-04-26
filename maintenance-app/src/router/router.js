@@ -18,7 +18,8 @@ export function initRouter({ outletId }) {
             currentRouteModule.unmount(outlet);
         }
 
-        const htmlResponse = await fetch(activeRoute.view.html);
+        const cacheBuster = `?t=${Date.now()}`;
+        const htmlResponse = await fetch(`${activeRoute.view.html}${cacheBuster}`);
         if (!htmlResponse.ok) {
             throw new Error(
                 `Failed to load HTML view: ${activeRoute.view.html}`,
@@ -33,7 +34,7 @@ export function initRouter({ outletId }) {
 
         const stylesheet = document.createElement("link");
         stylesheet.rel = "stylesheet";
-        stylesheet.href = activeRoute.view.css;
+        stylesheet.href = `${activeRoute.view.css}${cacheBuster}`;
         stylesheet.dataset.routeStyle = activeRoute.path;
         document.head.appendChild(stylesheet);
 
@@ -42,7 +43,7 @@ export function initRouter({ outletId }) {
         outlet.innerHTML = html;
         document.getElementById("nav-title").textContent = activeRoute.title;
 
-        const routeModule = await import(activeRoute.view.js);
+        const routeModule = await import(`${activeRoute.view.js}${cacheBuster}`);
         currentRouteModule = routeModule;
 
         if (routeModule.mount) {

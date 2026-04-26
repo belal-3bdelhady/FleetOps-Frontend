@@ -63,15 +63,6 @@ export const routes = [
         },
     },
     {
-        path: "/shifts",
-        title: "Shifts",
-        view: {
-            html: "/src/views/shifts/view.html",
-            css: "/src/views/shifts/view.css",
-            js: "/src/views/shifts/view.js",
-        },
-    },
-    {
         path: "/cod-management",
         title: "COD Management",
         view: {

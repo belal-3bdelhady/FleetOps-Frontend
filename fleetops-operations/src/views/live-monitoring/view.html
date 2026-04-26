@@ -1,8 +1,75 @@
-<section class="view-page app-section live-monitoring-page stack">
-    <section class="card stack">
-        <h1 class="heading-lg">Live Monitoring</h1>
-        <p>This module is ready for implementation.</p>
-        <p class="helper-text">Use this section to build the live monitoring workflow.</p>
-    </section>
-</section>
+<section class="view-page live-monitoring-page stack">
+    <section class="live-monitoring-toolbar">
+        <div class="live-monitoring-filters" id="live-monitoring-filters"></div>
 
+        <div class="live-monitoring-toolbar__right">
+            <div class="search-field live-monitoring-search">
+                <i data-lucide="search" class="search-icon"></i>
+                <input
+                    id="live-monitoring-search-input"
+                    type="search"
+                    placeholder="Search driver or plate..." />
+            </div>
+
+            <select id="live-monitoring-shift-select" aria-label="Select shift"></select>
+        </div>
+    </section>
+
+    <section class="live-monitoring-overview" id="live-monitoring-overview"></section>
+
+    <section class="live-monitoring-layout">
+        <section class="live-monitoring-map-card">
+            <header class="live-monitoring-map-card__head">
+                <div class="live-monitoring-map-card__badge">
+                    <i data-lucide="map-pinned"></i>
+                    <span>Live Tracking</span>
+                    <span class="live-dot" aria-hidden="true"></span>
+                </div>
+
+                <div class="live-monitoring-date-shortcuts" id="live-monitoring-date-shortcuts"></div>
+            </header>
+
+            <div class="live-monitoring-map" id="live-monitoring-map"></div>
+
+            <footer class="live-monitoring-timeline">
+                <div class="live-monitoring-date-input">
+                    <i data-lucide="calendar-days"></i>
+                    <input id="live-monitoring-date-input" type="date" />
+                    <button
+                        class="live-monitoring-date-input__icon"
+                        id="live-monitoring-date-picker-trigger"
+                        type="button"
+                        aria-label="Open date picker">
+                        <i data-lucide="calendar-range"></i>
+                    </button>
+                </div>
+
+                <input
+                    id="live-monitoring-frame-range"
+                    class="live-monitoring-frame-range"
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value="100" />
+
+                <div class="live-monitoring-controls">
+                    <button class="timeline-icon-btn" id="live-monitoring-play-btn" type="button" aria-label="Play timeline">
+                        <i data-lucide="play"></i>
+                    </button>
+                    <button class="timeline-icon-btn" id="live-monitoring-pause-btn" type="button" aria-label="Pause timeline">
+                        <i data-lucide="pause"></i>
+                    </button>
+                    <select id="live-monitoring-speed-select" aria-label="Playback speed"></select>
+                    <a href="/routes" data-link class="timeline-icon-btn" id="live-monitoring-view-routes-btn" type="button" aria-label="View routes" title="View Routes">
+                        <i data-lucide="navigation"></i>
+                    </a>
+                </div>
+            </footer>
+        </section>
+
+        <aside class="live-monitoring-sidebar" id="live-monitoring-sidebar"></aside>
+    </section>
+
+    <section class="live-monitoring-alerts" id="live-monitoring-alerts"></section>
+</section>
