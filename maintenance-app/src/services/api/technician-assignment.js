@@ -229,12 +229,34 @@ async function getMechanicRoster() {
 
         return items.map(normalizeMechanic);
     } catch (error) {
-        return [
-            normalizeMechanic({ name: "Karim Hassan", id: "MC-007", initials: "KH", specialty: "Engine", status: "Busy", activeJobs: 1 }),
-            normalizeMechanic({ name: "Omar Yusuf", id: "MC-012", initials: "OY", specialty: "Electrical", status: "Busy", activeJobs: 2 }),
-            normalizeMechanic({ name: "Ahmed Saleh", id: "MC-019", initials: "AS", specialty: "General", status: "Available", activeJobs: 0 }),
-            normalizeMechanic({ name: "Sara Ahmed", id: "MC-023", initials: "SA", specialty: "Brakes & Suspension", status: "Off Duty", activeJobs: 0 })
-        ];
+        const storedOrders = WorkOrdersApi.getAllOrders();
+
+        return WorkOrdersApi.getMechanics()
+            .filter((mechanic) => mechanic.name !== "Unassigned")
+            .map((mechanic, index) => {
+                const activeJobs = storedOrders.filter((order) => {
+                    const mechanicName =
+                        typeof order.mechanic === "string"
+                            ? order.mechanic
+                            : order.mechanic?.name;
+
+                    return (
+                        mechanicName === mechanic.name &&
+                        ["Assigned", "In Progress"].includes(order.status)
+                    );
+                }).length;
+
+                return normalizeMechanic(
+                    {
+                        ...mechanic,
+                        id: `MC-${String(index + 1).padStart(3, "0")}`,
+                        specialty: "General",
+                        status: activeJobs > 0 ? "Busy" : "Available",
+                        activeJobs,
+                    },
+                    index,
+                );
+            });
     }
 }
 

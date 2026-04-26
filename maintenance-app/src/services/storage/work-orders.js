@@ -45,3 +45,6 @@ export const DESCRIPTIONS = [
     "Windshield wiper motor failure. Replaced under warranty.",
     "Fuel injector cleaning and throttle body service requested.",
 ];
+
+export const WORK_ORDERS_STORAGE_KEY = "maintenance-app:work-orders";
+export const workOrdersMockData = [];
