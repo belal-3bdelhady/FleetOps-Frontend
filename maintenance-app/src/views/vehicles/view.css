@@ -1,6 +1,127 @@
-﻿.vehicles-page {
-    max-width: 1100px;
-    margin: 0 auto;
-    display: grid;
-    gap: 16px;
+.vehicle-page {
+  margin: 10px;
 }
+
+.vehicle-page-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: 5px;
+}
+
+.vehicle-page-subtitle {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.fleet-info {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+  padding: 10px;
+}
+
+.vehicle-page-filters {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  border: 2px solid var(--color-border);
+  border-radius: 20px;
+  padding: 20px;
+  background-color: var(--color-surface);
+  margin-bottom: 20px;
+}
+.vehicle-page-filter {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+}
+
+.vehicle-page-filter-input {
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 10px;
+  background-color: var(--color-surface);
+  flex: 1;
+  min-width: 60%;
+}
+.vehicle-page-filter-dropdown {
+  border: 1px solid var(--color-border);
+  padding: 10px;
+  border-radius: 20px;
+  background-color: var(--color-surface);
+  flex: 1;
+  min-width: 10%;
+  font-size: var(--font-size-sm);
+}
+
+.vehicle-page-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.vehicle-page-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid var(--color-border);
+  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+
+.vehicle-page-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-surface-strong);
+}
+
+.vehicle-page-table-body {
+  border: 2px solid var(--color-border);
+  border-radius: 20px;
+  padding: 20px;
+  gap: 20px;
+  background-color: var(--color-surface);
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+}
+
+.status-active {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status-maintenance {
+  background-color: #fef9c3;
+  color: #854d0e;
+}
+
+.status-inactive {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* Actions */
+.btn-view {
+  background-color: var(--color-primary);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  transition: opacity 0.2s;
+  display: inline-block;
+}
+
+.btn-view:hover {
+  opacity: 0.8;
+}
+
