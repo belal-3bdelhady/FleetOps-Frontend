@@ -21,6 +21,10 @@ const vehiclesData = [
         fuelLogs: [
             { date: "2026-04-10", cost: "EGP 4,180", volume: "55L", odometer: "87,100 km", location: "Total Egypt - Cairo Branch" },
             { date: "2026-03-25", cost: "EGP 4,560", volume: "60L", odometer: "86,200 km", location: "Shell Egypt - Giza" }
+        ],
+        maintenanceHistory: [
+            { id: "WO-2040", type: "Breakdown", mechanic: "Omar Yusuf", status: "In Progress", repairCost: "—", opened: "09/04/2026", closed: "—" },
+            { id: "WO-2030", type: "Routine", mechanic: "Ahmed Saleh", status: "Closed", repairCost: "EGP 12,000", opened: "20/03/2026", closed: "23/03/2026" }
         ]
     },
     {
