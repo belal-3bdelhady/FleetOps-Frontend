@@ -206,19 +206,22 @@ async function getAlertsData() {
     // Map notification fields → alert card shape
     return items
       .filter((n) => n.type !== "window_violation") // exclude violations
-      .map((n) => ({
-        type: n.title ?? n.type ?? "ALERT",
-        time:
-          n.time ??
-          (n.created_at
+      .map((n) => {
+        const payload = n.payload ?? {};
+        return {
+          type: payload.title ?? n.event_type ?? n.type ?? "ALERT",
+          title: payload.title ?? n.title ?? n.type ?? "ALERT",
+          description:
+            payload.description ?? payload.body ?? n.body ?? n.message ?? "",
+          time: n.created_at
             ? new Date(n.created_at).toLocaleTimeString("en-GB", {
                 hour: "2-digit",
                 minute: "2-digit",
               })
-            : ""),
-        severity: n.severity ?? n.priority ?? "warning",
-        message: n.body ?? n.message ?? "",
-      }));
+            : (n.time ?? ""),
+          severity: n.severity ?? n.priority ?? "warning",
+        };
+      });
   } catch (err) {
     console.error("[Dashboard] getAlertsData() failed:", err?.message ?? err);
     return [];

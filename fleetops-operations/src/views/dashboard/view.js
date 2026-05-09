@@ -201,11 +201,11 @@ function renderAlerts(root, alertsData) {
   container.innerHTML = alertsData.map(buildAlertCard).join("");
 }
 
-function buildAlertCard({ type, time, severity, message }) {
+function buildAlertCard({ type, title, description, time, severity }) {
   const severityClass =
     severity === "critical" ? "alert-critical" : "alert-warning";
 
-  const safeMessage = (message ?? "").replace(
+  const safeDescription = (description ?? "").replace(
     /(V-\d+|ORD-\d+)/g,
     "<strong>$1</strong>",
   );
@@ -216,6 +216,7 @@ function buildAlertCard({ type, time, severity, message }) {
                 <span class="alert-type">${type ?? "ALERT"}</span>
                 <span class="alert-time">${time ?? ""}</span>
             </div>
-            <div class="alert-message">${safeMessage}</div>
+            <div class="alert-title">${title ?? type ?? "ALERT"}</div>
+            <div class="alert-message">${safeDescription}</div>
         </div>`;
 }
