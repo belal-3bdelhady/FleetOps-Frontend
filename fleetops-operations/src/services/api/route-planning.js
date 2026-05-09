@@ -58,39 +58,20 @@ function normalizeOrder(rawOrder) {
 }
 
 function normalizeVehicle(rawVehicle) {
-    // Backend may return raw DB columns (VehicleLicense, MaxWeightCapacity, etc.)
-    // OR the already-mapped frontend shape (id, plate, type, max_weight, etc.)
-    // from VehicleService::getFleetVehicles() / getAvailableVehicles().
-    // This normalizer handles BOTH shapes safely.
-    const id     = rawVehicle?.vehicle_id ?? rawVehicle?.id;
-    const plate  = rawVehicle?.VehicleLicense
-                    ?? rawVehicle?.plate
-                    ?? `VH-${id ?? 'N/A'}`;
-    const type   = rawVehicle?.VehicleType
-                    ?? rawVehicle?.type
-                    ?? 'light';
-    const maxW   = toNumber(
-        rawVehicle?.MaxWeightCapacity
-        ?? rawVehicle?.max_weight
-        ?? rawVehicle?.maxWeight,
-        0,
-    );
-    const maxVol = toNumber(
-        rawVehicle?.MaxVolume
-        ?? rawVehicle?.max_volume
-        ?? rawVehicle?.maxVolume,
-        0,
-    );
-    const status = rawVehicle?.Status ?? rawVehicle?.status ?? 'Available';
-
     return {
         ...rawVehicle,
-        vehicleId: id,
-        plate,
-        type,
-        maxWeight: maxW,
-        maxVolume: maxVol,
-        status,
+        vehicleId: rawVehicle?.vehicle_id,
+        plate:
+            rawVehicle?.VehicleLicense ||
+            rawVehicle?.plate ||
+            `VH-${rawVehicle?.vehicle_id ?? "N/A"}`,
+        type: rawVehicle?.VehicleType || rawVehicle?.type || "Light",
+        maxWeight: toNumber(
+            rawVehicle?.MaxWeightCapacity ?? rawVehicle?.maxWeight,
+            0,
+        ),
+        maxVolume: toNumber(rawVehicle?.MaxVolume ?? rawVehicle?.maxVolume, 0),
+        status: rawVehicle?.Status || rawVehicle?.status || "Available",
     };
 }
 
@@ -135,10 +116,9 @@ async function getAreas(orders = null) {
         const uniqueAreas = Array.from(
             new Set(ordersToUse.map((order) => order.Area).filter(Boolean)),
         );
-        // Return whatever areas we found; return [] if none rather than crashing on AREAS
-        return uniqueAreas;
+        return uniqueAreas.length > 0 ? uniqueAreas : [...AREAS];
     } catch {
-        return [];
+        return [...AREAS];
     }
 }
 
@@ -152,19 +132,19 @@ async function getVehicles() {
         const vehicles = Array.isArray(data?.data)
             ? data.data.map(normalizeVehicle)
             : [];
+        // console.log(vehicles);
 
         if (vehicles.length > 0) {
             return vehicles;
         }
-
-        // API returned an empty list — surface it as-is instead of crashing
-        console.warn('[route-planning] vehicles/available returned 0 results');
-        return [];
     } catch (error) {
-        // Never reference the removed VEHICLES mock array — just return []
-        console.error('[route-planning] getVehicles() failed:', error?.message ?? error);
-        return [];
+        console.warn(
+            "Failed to fetch vehicles from API, using mock data",
+            error,
+        );
     }
+
+    return VEHICLES.map((vehicle) => ({ ...vehicle }));
 }
 
 /**
@@ -181,15 +161,14 @@ async function getDrivers() {
         if (drivers.length > 0) {
             return drivers;
         }
-
-        // API returned an empty list — surface it as-is
-        console.warn('[route-planning] users/drivers/Available returned 0 results');
-        return [];
     } catch (error) {
-        // Never reference the removed DRIVERS mock array — just return []
-        console.error('[route-planning] getDrivers() failed:', error?.message ?? error);
-        return [];
+        console.warn(
+            "Failed to fetch drivers from API, using mock data",
+            error,
+        );
     }
+
+    return DRIVERS.map((driver) => ({ ...driver }));
 }
 
 /**
@@ -204,12 +183,11 @@ async function getOrders(filters = {}) {
         const rawOrders = Array.isArray(data?.data) ? data.data : [];
         orders = rawOrders.map(normalizeOrder);
     } catch (error) {
-        // Never reference the removed MOCK_ORDERS constant — return []
         console.error(
-            '[route-planning] getOrders() failed — returning empty list:',
-            error?.message ?? error,
+            "Failed to fetch pending orders from API, using mock orders",
+            error,
         );
-        orders = [];
+        orders = MOCK_ORDERS.map(normalizeOrder);
     }
 
     if (!filters || Object.keys(filters).length === 0) {
