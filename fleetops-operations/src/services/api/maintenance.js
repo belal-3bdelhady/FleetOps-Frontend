@@ -13,10 +13,19 @@ api.setBaseURL("http://localhost:3000");
 // ─── API Methods ──────────────────────────────────────────────────────────────
 
 /**
- * Returns the list of vehicles with health state info.
+ * Returns the list of vehicles with health state info from backend.
  */
-function getVehicles() {
-    return [...maintenanceVehiclesData];
+async function getVehicles() {
+    try {
+        const response = await api.get('/api/v1/maintenance/vehicles');
+        if (response?.data?.success && Array.isArray(response.data.data)) {
+            return response.data.data;
+        }
+        return [];
+    } catch (error) {
+        console.error('Failed to fetch maintenance vehicles:', error);
+        return [];
+    }
 }
 
 /**
