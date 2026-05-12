@@ -91,6 +91,7 @@ function renderKPICards(kpiData) {
  * @param {Array<{id:string, text:string}>} alertsData
  */
 function renderAlerts(alertsData) {
+  
   const section = document.getElementById('alerts-section');
   if (!section) return;
 
@@ -273,7 +274,7 @@ export function initDashboard() {
   const mList      = document.getElementById('upcoming-maintenance-list');
 
   showLoading(kpiGrid,   'Loading KPIs…');
-  showLoading(alertsSec, 'Loading alerts…');
+  // showLoading(alertsSec, 'Loading alerts…');
   if (wTbody) wTbody.innerHTML = `<tr><td colspan="6" class="dashboard-loading">Loading work orders…</td></tr>`;
   showLoading(vList, 'Loading vehicles…');
   showLoading(mList, 'Loading schedule…');
@@ -289,7 +290,7 @@ export function initDashboard() {
       upcomingMaintenanceData,
     }) => {
       renderKPICards(kpiData);
-      renderAlerts(alertsData);
+      // renderAlerts(alertsData);
       renderWorkOrdersTable(workOrdersData);
       renderVehiclesAttention(vehiclesAttentionData);
       renderUpcomingMaintenance(upcomingMaintenanceData);
