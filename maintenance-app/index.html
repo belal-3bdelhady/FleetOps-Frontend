@@ -234,19 +234,7 @@
                         <button
                             class="topbar-icon-btn topbar-notification-btn"
                             type="button"
-                            aria-label="Notifications"
-                            onclick="
-                                import('./src/utils/notification-ui.js')
-                                    .then((module) =>
-                                        module.showNotificationPanel(),
-                                    )
-                                    .catch((err) =>
-                                        console.error(
-                                            'Error loading panel:',
-                                            err,
-                                        ),
-                                    )
-                            ">
+                            aria-label="Notifications">
                             <i data-lucide="bell"></i>
                             <span
                                 class="topbar-notification-badge"

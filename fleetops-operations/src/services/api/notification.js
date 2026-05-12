@@ -241,6 +241,8 @@ function getUnreadCount() {
  */
 function markAllRead() {
     _cache = _cache.map((n) => ({ ...n, read: true }));
+    // Fire and forget to the backend
+    api.post("/api/v1/notifications/mark-all-read").catch(e => console.error(e));
     return [..._cache];
 }
 
