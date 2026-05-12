@@ -1,5 +1,6 @@
 import VehicleStorage from "../../services/api/vehicles.js";
 import DriverStorage from "../../services/api/drivers.js";
+import AuthStorage from "../../services/api/auth.js";
 
 /**
  * Generates initials from a full name (e.g., "Ahmed Sayed" → "AS").
@@ -13,6 +14,33 @@ function getInitials(name) {
     .map((word) => word.charAt(0).toUpperCase())
     .slice(0, 2)
     .join("");
+}
+
+/**
+ * Handles the logout process by calling the API and clearing client-side state.
+ * @param {Event} event
+ */
+async function handleLogout(event) {
+  const logoutBtn = event.currentTarget;
+
+  // 1. UI Feedback: Disable button to prevent spamming
+  logoutBtn.disabled = true;
+  logoutBtn.style.opacity = "0.7";
+  logoutBtn.textContent = "Logging out...";
+
+  try {
+    // 2. API Call: Securely invalidate session on the server
+    await AuthStorage.logoutApi();
+  } catch (error) {
+    console.warn("Backend logout failed, proceeding with client-side cleanup:", error);
+  } finally {
+    // 3. Client-side Cleanup: CRITICAL RULE
+    // This must execute regardless of API success or failure
+    localStorage.clear();
+    
+    // Redirect to login (using window.location.href as requested for absolute cleanup)
+    window.location.href = "/login-page";
+  }
 }
 
 export async function mount(rootElement) {
@@ -110,42 +138,14 @@ export async function mount(rootElement) {
   const logoutBtn = rootElement.querySelector(".logout-button");
 
   if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      // Clear the authentication data from storage
-      localStorage.removeItem("isAuthenticated");
-
-      // Optionally clear any other user-specific session data
-      localStorage.removeItem("activeRoute");
-
-      // Crucial: Hide global UI elements for immediate feedback
-      const bottomNav = document.querySelector(".bottom-nav");
-      if (bottomNav) {
-        bottomNav.style.display = "none";
-
-        // Reset active states on navigation
-        const navItems = bottomNav.querySelectorAll(".nav-item");
-        navItems.forEach((item) => item.classList.remove("active"));
-      }
-
-      const topBar = document.querySelector(".top-bar");
-      if (topBar) {
-        topBar.style.display = "none";
-      }
-
-      // Reset app content height for the login page
-      const appContent = document.getElementById("app-content");
-      if (appContent) {
-        appContent.style.minHeight = "100vh";
-      }
-
-      // Redirect to login page
-      // We use replaceState to prevent the user from going back to the profile
-      window.history.replaceState({}, "", "/login-page");
-      window.dispatchEvent(new Event("popstate"));
-    });
+    logoutBtn.addEventListener("click", handleLogout);
   }
 }
 
 export function unmount(rootElement) {
-  // Cleanup any specific event listeners if needed
+  // Cleanup Logout event listener
+  const logoutBtn = rootElement.querySelector(".logout-button");
+  if (logoutBtn) {
+    logoutBtn.removeEventListener("click", handleLogout);
+  }
 }

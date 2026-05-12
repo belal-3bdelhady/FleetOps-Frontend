@@ -2,32 +2,31 @@ import api from "/shared/api-handler.js";
 
 // ─── Global Setup ─────────────────────────────────────────────────────────────
 
+// The base URL for our backend API
 api.setBaseURL("http://localhost:8000");
 
 // ─── API Methods ─────────────────────────────────────────────────────────────
 
-async function login(email, password) {
-  const response = await api.post("/api/v1/auth/login", { email, password });
+/**
+ * Calls the backend logout API to securely invalidate the driver's session.
+ * 
+ * @returns {Promise<Object>} The API response data.
+ * @throws {Error} If the request fails (though the view handler should handle it gracefully).
+ */
+async function logoutApi() {
+  /**
+   * NOTE: The apiHandler automatically retrieves the Bearer token 
+   * from localStorage on every request and attaches it to the 
+   * 'Authorization' header as required.
+   */
+  const response = await api.post("/api/v1/auth/logout");
   return response.data;
 }
 
-
-
-/**
- * Fetches a driver/user profile from the backend.
- *
- * @param {string|number} id - The user ID.
- * @returns {Promise<Object>} The user data object.
- */
-async function getDriverProfile(id) {
-  const response = await api.get(`/api/v1/users/${id}`);
-  return response.data.data;
-}
-
 // ────────────────────────────────────────────────────────────────
-const DriverStorage = {
-  login,
-  getDriverProfile,
+
+const AuthStorage = {
+  logoutApi,
 };
 
-export default DriverStorage;
+export default AuthStorage;

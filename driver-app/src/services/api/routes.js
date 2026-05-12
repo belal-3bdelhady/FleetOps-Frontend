@@ -1,5 +1,4 @@
 import api from "/shared/api-handler.js";
-import { routes } from "../storage/routes.js"; // TODO: remove when mock methods are integrated
 
 // ─── Global Setup ─────────────────────────────────────────────────────────────
 
@@ -74,6 +73,5 @@ const RoutesStorage = {
   getStopDetails,
   markStopDelivered,
 };
-
 
 export default RoutesStorage;

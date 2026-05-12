@@ -61,7 +61,9 @@ export async function mount(rootElement) {
     // ── Step D: Find an active/planned route ──────────────────────────────────
     const activeRoute = routes.find((r) => {
       const status = (r.status || "").toLowerCase();
-      return status === "active" || status === "planned" || status === "in_progress";
+      return (
+        status === "active" || status === "planned" || status === "in_progress"
+      );
     });
 
     if (!activeRoute) {
@@ -118,7 +120,8 @@ export async function mount(rootElement) {
     const progress = totalStops > 0 ? (completedStops / totalStops) * 100 : 0;
 
     const progressEl = view.querySelector(".data-target-progress");
-    if (progressEl) progressEl.textContent = `${completedStops} / ${totalStops}`;
+    if (progressEl)
+      progressEl.textContent = `${completedStops} / ${totalStops}`;
 
     const progressBarFill = view.querySelector(".data-target-progress-bar");
     if (progressBarFill) progressBarFill.style.width = `${progress}%`;
@@ -160,12 +163,16 @@ export async function mount(rootElement) {
         // ── Render Completed Stop ─────────────────────────────────────────────
         if (pendingStopTemplate && stopsTimeline) {
           const completedCard = pendingStopTemplate.cloneNode(true);
-          completedCard.className = "card completed-stop-card"; 
-          
-          const nameEl = completedCard.querySelector(".data-target-pending-name");
+          completedCard.className = "card completed-stop-card";
+
+          const nameEl = completedCard.querySelector(
+            ".data-target-pending-name",
+          );
           if (nameEl) nameEl.textContent = `Stop #${stop.stop_no} (Completed)`;
 
-          const addressEl = completedCard.querySelector(".data-target-pending-address");
+          const addressEl = completedCard.querySelector(
+            ".data-target-pending-address",
+          );
           if (addressEl) addressEl.textContent = `Order #${stop.order_id}`;
 
           stopsTimeline.appendChild(completedCard);
@@ -179,10 +186,15 @@ export async function mount(rootElement) {
           activeCard.setAttribute("data-route-id", activeRoute.route_id);
           activeCard.setAttribute("data-stop-id", stop.stop_id);
 
-          const completedStopsEl = activeCard.querySelector(".data-target-completed-stops");
-          if (completedStopsEl) completedStopsEl.textContent = stop.stop_no || "—";
+          const completedStopsEl = activeCard.querySelector(
+            ".data-target-completed-stops",
+          );
+          if (completedStopsEl)
+            completedStopsEl.textContent = stop.stop_no || "—";
 
-          const totalStopsEl = activeCard.querySelector(".data-target-total-stops");
+          const totalStopsEl = activeCard.querySelector(
+            ".data-target-total-stops",
+          );
           if (totalStopsEl) totalStopsEl.textContent = totalStops;
 
           const { time, ampm } = parseETA(stop.eta);
@@ -195,8 +207,11 @@ export async function mount(rootElement) {
           const stopNameEl = activeCard.querySelector(".data-target-stop-name");
           if (stopNameEl) stopNameEl.textContent = `Stop #${stop.stop_no}`;
 
-          const stopAddressEl = activeCard.querySelector(".data-target-stop-address");
-          if (stopAddressEl) stopAddressEl.textContent = `Order #${stop.order_id}`;
+          const stopAddressEl = activeCard.querySelector(
+            ".data-target-stop-address",
+          );
+          if (stopAddressEl)
+            stopAddressEl.textContent = `Order #${stop.order_id}`;
 
           const navigateBtn = activeCard.querySelector(".navigate-btn");
           if (navigateBtn && stop.latitude && stop.longitude) {
@@ -207,47 +222,51 @@ export async function mount(rootElement) {
           // Arrived Button Logic (Must be re-attached to the cloned button)
           const arrivedBtn = activeCard.querySelector(".route-action-btn");
           if (arrivedBtn) {
-              const arrivedBtnOriginalHTML = arrivedBtn.innerHTML;
-              arrivedBtn.addEventListener("click", async () => {
-                  arrivedBtn.disabled = true;
-                  arrivedBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="spin"><circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" /></svg> Arriving…`;
-                  
-                  try {
-                      await RoutesStorage.markArrived(stop.stop_id);
-                      arrivedBtn.style.display = "none";
-                      const activeBadge = activeCard.querySelector(".active-stop-badge");
-                      if (activeBadge) {
-                          activeBadge.classList.add("text-success");
-                          activeBadge.textContent = "Arrived ✅";
-                      }
-                      
-                      const stopActions = activeCard.querySelector(".stop-actions");
-                      if (stopActions) {
-                          const detailsBtn = document.createElement("button");
-                          detailsBtn.className = "button primary btn-details-link";
-                          detailsBtn.innerHTML = `View Stop Details`;
-                          detailsBtn.addEventListener("click", () => {
-                              localStorage.setItem("current_stop_id", stop.stop_id);
-                              window.history.pushState({}, "", "/stop-details-page");
-                              window.dispatchEvent(new Event("popstate"));
-                          });
-                          stopActions.appendChild(detailsBtn);
-                      }
-                  } catch (err) {
-                      console.error("Arrival failed", err);
-                      arrivedBtn.disabled = false;
-                      arrivedBtn.innerHTML = arrivedBtnOriginalHTML;
-                  }
-              });
+            const arrivedBtnOriginalHTML = arrivedBtn.innerHTML;
+            arrivedBtn.addEventListener("click", async () => {
+              arrivedBtn.disabled = true;
+              arrivedBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="spin"><circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" /></svg> Arriving…`;
+
+              try {
+                await RoutesStorage.markArrived(stop.stop_id);
+                arrivedBtn.style.display = "none";
+                const activeBadge =
+                  activeCard.querySelector(".active-stop-badge");
+                if (activeBadge) {
+                  activeBadge.classList.add("text-success");
+                  activeBadge.textContent = "Arrived ✅";
+                }
+
+                const stopActions = activeCard.querySelector(".stop-actions");
+                if (stopActions) {
+                  const detailsBtn = document.createElement("button");
+                  detailsBtn.className = "button primary btn-details-link";
+                  detailsBtn.innerHTML = `View Stop Details`;
+                  detailsBtn.addEventListener("click", () => {
+                    localStorage.setItem("current_stop_id", stop.stop_id);
+                    window.history.pushState({}, "", "/stop-details-page");
+                    window.dispatchEvent(new Event("popstate"));
+                  });
+                  stopActions.appendChild(detailsBtn);
+                }
+              } catch (err) {
+                console.error("Arrival failed", err);
+                arrivedBtn.disabled = false;
+                arrivedBtn.innerHTML = arrivedBtnOriginalHTML;
+              }
+            });
           }
 
           const navBtnClone = activeCard.querySelector(".navigate-btn");
           navBtnClone?.addEventListener("click", (e) => {
-              const lat = e.currentTarget.getAttribute("data-lat");
-              const lng = e.currentTarget.getAttribute("data-lng");
-              if (lat && lng) {
-                  window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, "_blank");
-              }
+            const lat = e.currentTarget.getAttribute("data-lat");
+            const lng = e.currentTarget.getAttribute("data-lng");
+            if (lat && lng) {
+              window.open(
+                `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+                "_blank",
+              );
+            }
           });
 
           stopsTimeline.appendChild(activeCard);
@@ -256,10 +275,16 @@ export async function mount(rootElement) {
         // ── Remaining pending stops → Cloned Pending Cards ────────────────────
         if (pendingStopTemplate && stopsTimeline) {
           const pendingCard = pendingStopTemplate.cloneNode(true);
-          const pendingNameEl = pendingCard.querySelector(".data-target-pending-name");
-          if (pendingNameEl) pendingNameEl.textContent = `Stop #${stop.stop_no}`;
-          const pendingAddressEl = pendingCard.querySelector(".data-target-pending-address");
-          if (pendingAddressEl) pendingAddressEl.textContent = `Order #${stop.order_id}`;
+          const pendingNameEl = pendingCard.querySelector(
+            ".data-target-pending-name",
+          );
+          if (pendingNameEl)
+            pendingNameEl.textContent = `Stop #${stop.stop_no}`;
+          const pendingAddressEl = pendingCard.querySelector(
+            ".data-target-pending-address",
+          );
+          if (pendingAddressEl)
+            pendingAddressEl.textContent = `Order #${stop.order_id}`;
           stopsTimeline.appendChild(pendingCard);
         }
       }
@@ -268,7 +293,10 @@ export async function mount(rootElement) {
     // ── End of stops rendering ───────────────────────────────────────────────
   } catch (error) {
     console.error("Failed to load active route:", error);
-    showEmptyState(routeView, "Failed to load route data. Please try again later.");
+    showEmptyState(
+      routeView,
+      "Failed to load route data. Please try again later.",
+    );
   }
 }
 
