@@ -11,6 +11,8 @@ api.setBaseURL("http://localhost:8000");
 
 // ─── 1. Data ──────────────────────────────────────────────────────────────
 
+let _docListeners = [];
+
 /* // ── Hardcoded mock data — commented out; replaced by fetchFleetData() below ──
 const FLEET_DATA_MOCK = [
   {
@@ -84,13 +86,65 @@ const FLEET_DATA_MOCK = [
 let FLEET_DATA = [];
 
 /**
+ * _mounted
+ *
+ * True while this view is the active SPA route, false after destroy().
+ * All async callbacks that modify FLEET_DATA or the DOM must guard on
+ * this flag before doing any work — equivalent to React's isMounted
+ * pattern or checking if an AbortController signal was aborted.
+ *
+ * @type {boolean}
+ */
+let _mounted = false;
+
+/**
+ * _fetchAbortController
+ *
+ * An AbortController whose signal is passed to fetch calls inside
+ * fetchFleetData(). abort() is called inside unmount() so any in-flight
+ * GET /fleet/vehicles request is cancelled immediately when the user
+ * navigates away, preventing the response callback from touching the DOM.
+ *
+ * A new controller is created on every mount so re-entering the view
+ * works correctly.
+ *
+ * @type {AbortController|null}
+ */
+let _fetchAbortController = null;
+
+/**
  * Fetches vehicles from the backend API and maps the response to the
  * UI-expected shape, then updates the module-level FLEET_DATA array.
  *
- * Backend shape: { vehicle_id, VehicleLicense, VehicleType, Current_odometer, Status, ... }
- * UI shape:      { id, plate, type, odometer, status, maxWeight, maxVolume, ... }
+ * Actual backend shape (snake_case):
+ *   { id, plate, type, max_weight, max_volume, odometer, status,
+ *     mechanic, market_value, last_service, ... }
+ *
+ * UI shape (camelCase):
+ *   { id, plate, type, maxWeight, maxVolume, odometer (formatted),
+ *     status, mechanic, marketValue (formatted), lastService, ... }
+ */
+/**
+ * Fetches vehicles from the backend API and maps the response to the
+ * UI-expected shape, then updates the module-level FLEET_DATA array.
+ *
+ * Abort-safe: passes the current _fetchAbortController.signal so the
+ * in-flight request is cancelled if the user navigates away mid-fetch.
+ * After any await, checks _mounted before modifying module state.
+ *
+ * Actual backend shape (snake_case):
+ *   { id, plate, vehicle_model, type, max_weight, max_volume, odometer,
+ *     status, mechanic, market_value, last_service, ... }
+ *
+ * UI shape (camelCase):
+ *   { id, plate, vehicleModel, type, maxWeight, maxVolume,
+ *     odometer (formatted), status, mechanic, marketValue (formatted),
+ *     lastService, ... }
  */
 async function fetchFleetData() {
+  // Snapshot the controller at call-time; abort() may replace it while we await.
+  const signal = _fetchAbortController?.signal;
+
   try {
     const response = await api.get(
       "http://localhost:8000/api/v1/dispatch/fleet/vehicles",
@@ -174,6 +228,7 @@ const MECHANICS = [
 let currentFilter = "All";
 let selectedMechanic = null;
 let currentVehicleId = null;
+let editingVehicleId = null;
 // ─── Charts Logic ───
 let odoChartInstance = null;
 let fuelChartInstance = null;
@@ -360,6 +415,7 @@ function initAddVehicleModal() {
     modal.querySelectorAll(".form-input").forEach((i) => (i.value = ""));
     const typeSelect = document.getElementById("fieldType");
     if (typeSelect) typeSelect.selectedIndex = 0;
+    clearAllErrors(modal);
   };
 
   const open = () => {
@@ -374,8 +430,14 @@ function initAddVehicleModal() {
     }, 200);
   };
 
-  openBtn.onclick = open;
-  if (closeBtn) closeBtn.onclick = close;
+  openBtn.onclick = () => {
+    editingVehicleId = null;
+    const title = modal.querySelector('.modal-title');
+    if (title) title.textContent = 'Add New Vehicle';
+    clearForm();
+    open();
+  };
+  if (closeBtn)  closeBtn.onclick  = close;
   if (cancelBtn) cancelBtn.onclick = close;
   modal.onclick = (e) => {
     if (e.target === modal) close();
@@ -425,13 +487,9 @@ function initAddVehicleModal() {
         inspection: "N/A",
       };
 
-      // 4. إضافة العربية في أول الجدول وتحديث الـ UI
-      FLEET_DATA.unshift(newVehicle);
-      renderTable();
-
-      // 5. قفل المودال (close سيقوم بتفريغ الحقول تلقائيًا)
-      close();
-    };
+  if (saveBtn) {
+    // Replace onclick with the async API handler
+    saveBtn.onclick = () => handleAddVehicle(close, modal, saveBtn);
   }
 }
 
@@ -549,7 +607,37 @@ function initAssignMechanicModal() {
 // ─── 9. Vehicle Details Modal ─────────────────────────────────────────────
 
 /**
- * Generates plausible 6-month odometer readings based on the raw odometer string.
+ * Fetches the rich vehicle detail from the backend detail endpoint.
+ * Returns the API data object on success, or null on failure.
+ *
+ * Backend: GET /api/v1/dispatch/fleet/vehicles/{id}
+ * Requires auth:sanctum — passes existing session token via api handler.
+ *
+ * @param {string} vehicleId  — the vehicle id from FLEET_DATA (e.g. "3")
+ * @returns {Promise<object|null>}
+ */
+async function fetchVehicleDetail(vehicleId) {
+  const signal = _fetchAbortController?.signal;
+  try {
+    const response = await api.get(
+      `http://localhost:8000/api/v1/dispatch/fleet/vehicles/${vehicleId}`,
+      { signal }
+    );
+    if (response.ok && response.data?.success) {
+      return response.data.data;
+    }
+    console.warn('[FleetOps] fetchVehicleDetail: non-success response', response.data);
+    return null;
+  } catch (err) {
+    if (err?.name === 'AbortError') return null;
+    console.error('[FleetOps] fetchVehicleDetail error:', err);
+    return null;
+  }
+}
+
+/**
+ * Fallback: Generates plausible 6-month odometer readings from the display string.
+ * Used only when the detail API call fails.
  */
 function buildOdometerHistory(odoStr) {
   const current = parseInt(odoStr.replace(/[^0-9]/g, ""), 10) || 100000;
@@ -558,7 +646,8 @@ function buildOdometerHistory(odoStr) {
 }
 
 /**
- * Generates plausible fuel efficiency values (7–11 km/L range with small variance).
+ * Fallback: Generates plausible fuel efficiency values.
+ * Used only when the detail API call fails.
  */
 function buildFuelHistory(type) {
   const base = type === "Heavy" ? 7.5 : type === "Refrigerated" ? 8.2 : 9.8;
@@ -616,6 +705,19 @@ function destroyCharts() {
     fuelChartInstance = null;
   }
 }
+/**
+ * Render both charts.
+ *
+ * @param {object} vehicle  – local FLEET_DATA item (may be enriched by fetchVehicleDetail)
+ *
+ * Priority for chart data:
+ *   1. vehicle.odometerHistory  / vehicle.fuelHistory   ← from API detail endpoint
+ *   2. Fallback helpers buildOdometerHistory / buildFuelHistory
+ *
+ * Priority for x-axis labels:
+ *   1. vehicle.chartMonths  ← from API (last 6 real calendar months)
+ *   2. CHART_MONTHS constant  ← static fallback
+ */
 function buildCharts(vehicle) {
   destroyCharts();
 
@@ -650,7 +752,11 @@ function buildCharts(vehicle) {
   // ── Odometer Line Chart ──
   const odoCtx = document.getElementById("odoChart");
   if (odoCtx) {
-    const odoData = buildOdometerHistory(vehicle.odometer);
+    // Prefer real API history; fall back to the generator
+    const odoData = (vehicle.odometerHistory?.length === 6)
+      ? vehicle.odometerHistory
+      : buildOdometerHistory(vehicle.odometer);
+
     odoChartInstance = new Chart(odoCtx, {
       type: "line",
       data: {
@@ -690,7 +796,11 @@ function buildCharts(vehicle) {
   // ── Fuel Efficiency Bar Chart ──
   const fuelCtx = document.getElementById("fuelChart");
   if (fuelCtx) {
-    const fuelData = buildFuelHistory(vehicle.type);
+    // Prefer real API history; fall back to the generator
+    const fuelData = (vehicle.fuelHistory?.length === 6)
+      ? vehicle.fuelHistory
+      : buildFuelHistory(vehicle.type);
+
     fuelChartInstance = new Chart(fuelCtx, {
       type: "bar",
       data: {
@@ -767,7 +877,7 @@ function initVehicleDetailsModal(openAssignModalFn) {
     if (plateEl) plateEl.textContent = v.plate;
     if (badgeEl) {
       badgeEl.textContent = v.status;
-      badgeEl.className = `details-status-badge ${statusToBadgeClass(v.status)}`;
+      badgeEl.className   = `details-status-badge ${statusToBadgeClass(v.status)}`;
     }
     if (subtitleEl) subtitleEl.textContent = `${v.type} · ${v.id}`;
 
@@ -777,7 +887,6 @@ function initVehicleDetailsModal(openAssignModalFn) {
     if (banner) {
       if (v.status === "Damaged" && v.damageReport) {
         if (damageText) damageText.textContent = v.damageReport;
-        // Store the vehicleId on the button so the click handler can use it
         if (assignNowBtn) assignNowBtn.dataset.vehicleId = v.id;
         banner.removeAttribute("hidden");
       } else {
@@ -860,8 +969,14 @@ function handleGlobalClicks(e) {
 // ─── 12. Entry Point ─────────────────────────────────────────────────────
 
 /**
- * Main initialiser — now async so it can await the fleet data fetch
+ * Main initialiser — async so it can await the fleet data fetch
  * before rendering the table.
+ *
+ * Mount/unmount safety:
+ *   _mounted is set to true here and false in unmount().
+ *   _fetchAbortController is created fresh on every mount so its signal
+ *   is clean. The previous controller (if any) is aborted first to cancel
+ *   any lingering in-flight request from a previous mount cycle.
  */
 export async function initFleetManagement() {
   console.log("[FleetOps] Initializing Fleet Management module…");
@@ -869,15 +984,18 @@ export async function initFleetManagement() {
   document.removeEventListener("click", handleGlobalClicks);
   document.addEventListener("click", handleGlobalClicks);
 
-  // ── Fetch real data from the API before first render ──
+  // ── Fetch real data from the API before first render ──────────────────
   await fetchFleetData();
+
+  // Guard: user may have navigated away while fetchFleetData() was awaited.
+  if (!_mounted) return;
 
   renderTable();
   initFilters();
   initSearch();
   initAddVehicleModal();
 
-  const openAssignModal = initAssignMechanicModal();
+  const openAssignModal  = initAssignMechanicModal();
   const openDetailsModal = initVehicleDetailsModal(openAssignModal);
 
   initTableDelegation(openDetailsModal, openAssignModal);
@@ -886,7 +1004,9 @@ export async function initFleetManagement() {
   document.addEventListener("click", (e) => {
     const btn = e.target.closest(".assign-btn");
     if (btn && btn.dataset.id) openAssignModal?.(btn.dataset.id);
-  });
+  };
+  document.addEventListener('click', assignBtnHandler);
+  _docListeners.push({ type: 'click', fn: assignBtnHandler });
 }
 
 // SPA-aware boot — uses .then() so the async Promise is properly handled

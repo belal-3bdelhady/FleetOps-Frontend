@@ -1,4 +1,5 @@
 import OrdersApi from "../../services/api/orders.js";
+import api from "/shared/api-handler.js";
 import {
     createIcons,
     icons,
@@ -77,7 +78,7 @@ function bindPageEvents() {
         () => exportButton?.removeEventListener("click", handleExport),
         () => modalRoot?.removeEventListener("click", handleModalClick),
         () => modalRoot?.removeEventListener("change", handleModalChange),
-        () => modalRoot?.removeEventListener("submit", handleModalSubmit),
+        () => modalRoot?.removeEventListener("submit", handleAddOrder),
         () => document.removeEventListener("keydown", handleEscape),
     );
 }
@@ -188,12 +189,44 @@ function renderOrderRow(order) {
             <td>${renderStatusBadge(order.status)}</td>
             <td>${renderDriverCell(order)}</td>
             <td>
-                <button class="tracking-link-chip" type="button" data-action="open-order" data-order-id="${order.id}">
-                    <i data-lucide="square-arrow-out-up-right"></i>
-                    <span>Link</span>
-                </button>
+                ${renderTrackingLinkCell(order)}
             </td>
         </tr>
+    `;
+}
+
+function renderTrackingLinkCell(order) {
+    // Use tracking_url exclusively — this is the canonical backend field.
+    // (trackingLink was the old camelCase name; it no longer exists in the
+    //  mapped order object since the previous session's API refactor.)
+    const url = order.tracking_url ?? null;
+
+    if (url) {
+        return `
+            <a  class="tracking-link-chip"
+                href="${url}"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-action="open-tracking"
+                data-url="${url}"
+                title="Open customer tracking page"
+                aria-label="Open tracking link for order ${order.id}">
+                <i data-lucide="square-arrow-out-up-right"></i>
+                <span>Link</span>
+            </a>
+        `;
+    }
+
+    return `
+        <button
+            class="tracking-link-chip is-disabled"
+            type="button"
+            disabled
+            aria-disabled="true"
+            title="No tracking token — link not yet available">
+            <i data-lucide="link-2-off"></i>
+            <span>No Token</span>
+        </button>
     `;
 }
 
@@ -267,7 +300,10 @@ function renderDetailsModal(order) {
         return "";
     }
 
-    const timelineContent = renderOrderTimeline(order);
+    // Default active tab. Extended tab switching can be wired up later;
+    // for now the Timeline panel is always shown (it requires no extra data).
+    const activeTab = "timeline";
+    const tabContent = renderOrderTimeline(order);
 
     return `
         <div class="modal-overlay" data-modal-close="overlay">
@@ -301,7 +337,27 @@ function renderDetailsModal(order) {
                         ${renderInfoCard("map-pin", "Weight / Volume", `${formatWeight(order.weightKg)} / ${order.volumeM3} m3`, order.createdAt)}
                     </section>
 
-                    ${timelineContent}
+                    <section class="tracking-banner">
+                        <div class="tracking-banner__left">
+                            <i data-lucide="square-arrow-out-up-right"></i>
+                            <div class="tracking-banner__copy">
+                                <strong>Live Tracking Link (sent to customer automatically)</strong>
+                                <a id="modal-tracking-link" href="${order.tracking_url ?? ''}" target="_blank" rel="noreferrer">${order.tracking_url ?? 'No tracking token assigned yet'}</a>
+                            </div>
+                        </div>
+                        <button id="modal-copy-btn" class="button primary" type="button" data-action="copy-link" data-link="${order.tracking_url ?? ''}">
+                            <i data-lucide="copy"></i>
+                            <span>Copy</span>
+                        </button>
+                    </section>
+
+                    <section class="tab-strip">
+                        <button class="tab-button ${activeTab === "live" ? "is-active" : ""}" type="button" data-tab="live">Live Tracking</button>
+                        <button class="tab-button ${activeTab === "notifications" ? "is-active" : ""}" type="button" data-tab="notifications">Notifications</button>
+                        <button class="tab-button ${activeTab === "timeline" ? "is-active" : ""}" type="button" data-tab="timeline">Timeline</button>
+                    </section>
+
+                    ${tabContent}
                 </div>
             </section>
         </div>
@@ -556,6 +612,16 @@ async function handleTableClick(event) {
         return;
     }
 
+    // ── Tracking link — open customer-facing URL in a new tab ──────────────
+    const trackingLink = event.target.closest("[data-action='open-tracking']");
+    if (trackingLink) {
+        event.stopPropagation();
+        const url = trackingLink.dataset.url || trackingLink.getAttribute('href');
+        if (url) window.open(url, '_blank', 'noopener,noreferrer');
+        return;
+    }
+
+    // ── Any other row / notification chip click → open details modal ───────
     const row = event.target.closest("[data-order-id]");
     const actionButton = event.target.closest("[data-action='open-order']");
     const orderId = actionButton?.dataset.orderId ?? row?.dataset.orderId;
@@ -570,16 +636,38 @@ async function handleTableClick(event) {
 function handleModalClick(event) {
     const overlay = event.target.closest("[data-modal-close='overlay']");
     const closeButton = event.target.closest("[data-modal-close='button']");
-    const confirmImportButton = event.target.closest(
-        "[data-action='confirm-import']",
-    );
+    const confirmImportButton = event.target.closest("[data-action='confirm-import']");
+    const copyLinkBtn = event.target.closest("[data-action='copy-link']");
+
     if (event.target === overlay || closeButton) {
         closeModal();
         return;
     }
 
     if (confirmImportButton) {
-        confirmImport();
+        handleImport();
+        return;
+    }
+
+    // ── Copy tracking URL to clipboard ───────────────────────────────────
+    if (copyLinkBtn) {
+        const url = copyLinkBtn.dataset.link;
+        if (!url) return;
+
+        copyTrackingLink(url).then(() => {
+            // Brief visual confirmation — swap icon+text for 1.5 s
+            const span = copyLinkBtn.querySelector('span');
+            if (span) {
+                span.textContent = 'Copied!';
+                setTimeout(() => { span.textContent = 'Copy'; }, 1500);
+            }
+        }).catch(() => {
+            const span = copyLinkBtn.querySelector('span');
+            if (span) {
+                span.textContent = 'Failed';
+                setTimeout(() => { span.textContent = 'Copy'; }, 1500);
+            }
+        });
     }
 }
 
@@ -591,7 +679,7 @@ function handleModalChange(event) {
 
 function handleModalSubmit(event) {
     if (event.target.id === "add-order-form") {
-        handleAddOrderSubmit(event);
+        handleAddOrder(event);
     }
 }
 
@@ -614,7 +702,7 @@ async function handleImportFileChange(event) {
     refreshIcons();
 }
 
-async function handleAddOrderSubmit(event) {
+async function handleAddOrder(event) {
     event.preventDefault();
     const formData = new FormData(event.target);
 
@@ -625,7 +713,30 @@ async function handleAddOrderSubmit(event) {
     }
 
     state.addForm = Object.fromEntries(formData.entries());
-    await OrdersApi.createOrder(state.addForm);
+    
+    try {
+        const paymentType = state.addForm.paymentType === "COD" ? "COD" : "prepaid";
+        const backendPayload = {
+            customer_name: state.addForm.customerName?.trim(),
+            customer_phone: state.addForm.customerPhone?.trim(),
+            customer_email: state.addForm.customerEmail?.trim() || null,
+            delivery_address: state.addForm.address?.trim(),
+            lat: Number(state.addForm.latitude),
+            lng: Number(state.addForm.longitude),
+            weight_kg: Number(state.addForm.weightKg) || 0,
+            volume_m3: Number(state.addForm.volumeM3) || 0,
+            payment_type: paymentType,
+            cod_amount: paymentType === "COD" ? Number(state.addForm.codAmount) || 0 : null,
+            priority: state.addForm.priority === "High" || state.addForm.priority === "Urgent" ? "express" : "normal",
+            delivery_preference: state.addForm.paymentWindow?.trim() || null,
+            notes: state.addForm.notes?.trim() || null,
+        };
+        await api.post("http://localhost:8000/api/v1/orders", backendPayload);
+    } catch (error) {
+        console.error("Failed to create order via api-handler:", error);
+    }
+
+    // Refresh logic
     state.orders = await OrdersApi.getOrders();
     state.currentPage = 1;
     state.addForm = null;
@@ -642,6 +753,94 @@ async function openDetailsModal(orderId) {
     };
     renderModal();
     refreshIcons();
+
+    // ── Force-patch the tracking link via DOM after render ────────────────
+    // This is the definitive safety net: even if the template rendered with
+    // stale / null data, the DOM nodes are overwritten here with the freshest
+    // value returned by getOrderById() just above.
+    patchModalTrackingLink(orderData?.tracking_url ?? null);
+}
+
+/**
+ * patchModalTrackingLink(url)
+ *
+ * After the modal HTML is injected into the DOM, this function directly
+ * writes `url` into every tracking-related element by ID.
+ *
+ * Elements targeted:
+ *   #modal-tracking-link   — the <a> tag shown when a URL exists
+ *   #modal-tracking-no-link — the <span> shown when no URL exists
+ *   #modal-copy-btn        — the Copy <button>
+ *
+ * This DOM override approach is intentional: it makes the displayed URL
+ * and the clipboard copy 100% derived from the live API response and
+ * immune to any template-string escaping or caching issues.
+ *
+ * @param {string|null} url  The canonical tracking URL from the backend.
+ */
+function patchModalTrackingLink(url) {
+    const linkEl   = document.getElementById('modal-tracking-link');
+    const noLinkEl = document.getElementById('modal-tracking-no-link');
+    const copyBtn  = document.getElementById('modal-copy-btn');
+    const banner   = linkEl?.closest('.tracking-banner')
+                  ?? noLinkEl?.closest('.tracking-banner')
+                  ?? document.querySelector('.tracking-banner');
+
+    // ── Catch-all: grab ANY <a> inside the tracking banner ────────────────
+    // Covers the edge case where element IDs were stripped by a stale
+    // cached template render or a browser/proxy that sanitises attributes.
+    const anyBannerLink = linkEl ?? banner?.querySelector('a');
+
+    if (url) {
+        // ── URL is available ──────────────────────────────────────────────
+        console.debug('[Orders] Force-patching modal tracking link to:', url);
+
+        if (anyBannerLink) {
+            anyBannerLink.setAttribute('href', url);
+            anyBannerLink.textContent = url;
+            anyBannerLink.removeAttribute('style');
+        }
+
+        // Also explicitly patch #modal-tracking-link if it's a different node
+        if (linkEl && linkEl !== anyBannerLink) {
+            linkEl.href        = url;
+            linkEl.textContent = url;
+        }
+
+        if (copyBtn) {
+            // Sync the data-link attribute so the existing copy-link
+            // delegated handler reads the correct value.
+            copyBtn.dataset.link = url;
+            copyBtn.removeAttribute('disabled');
+            copyBtn.setAttribute('aria-disabled', 'false');
+        }
+
+        // Remove the "no-link" styling from the banner if present
+        banner?.classList.remove('tracking-banner--no-link');
+
+    } else {
+        // ── No URL yet ───────────────────────────────────────────────────
+        console.warn('[Orders] Could not find modal-tracking-link element or tracking_url is missing.');
+
+        if (anyBannerLink) {
+            anyBannerLink.removeAttribute('href');
+            anyBannerLink.textContent = 'No tracking token assigned yet';
+            anyBannerLink.classList.add('tracking-banner__no-link');
+        }
+
+        if (noLinkEl) {
+            noLinkEl.textContent = 'No tracking token assigned yet';
+        }
+
+        if (copyBtn) {
+            copyBtn.setAttribute('disabled', '');
+            copyBtn.setAttribute('aria-disabled', 'true');
+            // Clear the data-link so copyTrackingLink's null guard fires
+            copyBtn.dataset.link = '';
+        }
+
+        banner?.classList.add('tracking-banner--no-link');
+    }
 }
 
 function openImportModal() {
@@ -663,7 +862,7 @@ function closeModal() {
     renderModal();
 }
 
-async function confirmImport() {
+async function handleImport() {
     if (!state.importFile) {
         return;
     }
@@ -675,20 +874,30 @@ async function confirmImport() {
     }
 
     try {
-        const result = await OrdersApi.importOrders(state.importFile);
+        const formData = new FormData();
+        const extension = state.importFile.name.split(".").pop().toLowerCase();
+        let format = "csv";
+        if (extension === "xml") format = "xml";
+        
+        formData.append("file", state.importFile);
+        formData.append("format", format);
+
+        const response = await api.post("http://localhost:8000/api/v1/orders/import", formData);
+        const result = response.data?.data || {};
         
         if (result.errors && result.errors.length > 0) {
-            alert(`Imported ${result.imported} orders with some errors:\n${result.errors.slice(0, 5).join('\n')}${result.errors.length > 5 ? '\n...' : ''}`);
+            alert(`Imported ${result.imported || 0} orders with some errors:\n${result.errors.slice(0, 5).join('\n')}${result.errors.length > 5 ? '\n...' : ''}`);
         } else {
-            alert(`Successfully imported ${result.imported} orders.`);
+            alert(`Successfully imported ${result.imported || 0} orders.`);
         }
 
+        // Refresh logic
         state.orders = await OrdersApi.getOrders();
         state.currentPage = 1;
         closeModal();
         renderPage();
     } catch (error) {
-        alert("Import failed: " + error.message);
+        alert("Import failed: " + (error.data?.message || error.message));
         if (confirmBtn) {
             confirmBtn.disabled = false;
             confirmBtn.textContent = "Confirm Import";
@@ -850,6 +1059,14 @@ function formatWeight(weight) {
 
 function toKebabCase(value) {
     return value.toLowerCase().replace(/\s+/g, "-");
+}
+
+async function copyTrackingLink(link) {
+    try {
+        await navigator.clipboard.writeText(link);
+    } catch (error) {
+        console.error("Could not copy tracking link", error);
+    }
 }
 
 function refreshIcons() {
